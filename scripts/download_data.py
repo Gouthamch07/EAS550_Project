@@ -75,6 +75,8 @@ output_filename = "./data/openfoodfacts_data.csv"
 output_dir = os.path.dirname(output_filename)
 os.makedirs(output_dir, exist_ok=True)  # Make data directory if it doesn't exist
 
+df_final.to_csv(output_filename, index=False)
+
 # --- Final Output ---
 print(f"\nProcessing complete!")
 print(f"Final DataFrame shape: {df_final.shape}")
