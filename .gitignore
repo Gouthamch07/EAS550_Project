@@ -1,0 +1,48 @@
+# Data files (too large for GitHub)
+raw_data/*.parquet
+raw_data/*.tsv
+raw_data/*.csv
+raw_data/*.gz
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Environment variables
+.env
+.env.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Logs
+*.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+*.tmp
+temp/
+
+# Custom files and directories
+.DS_Store
+*.parquet
