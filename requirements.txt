@@ -1,0 +1,9 @@
+pandas
+pyarrow
+sqlalchemy
+psycopg2-binary
+python-dotenv
+streamlit
+fastapi
+uvicorn
+huggingface-hub
