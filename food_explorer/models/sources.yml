@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: public
+    database: food_nutrition_db
+    schema: public
+    tables:
+      - name: products
+      - name: nutrition_facts
+      - name: brands
+      - name: product_brands
