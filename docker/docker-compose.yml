@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   # PostgreSQL Database
   postgres:
@@ -11,7 +13,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      # Docker will run schema.sql then security.sql automatically due to alphabetical order.
       - ../sql/:/docker-entrypoint-initdb.d/
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -30,6 +31,30 @@ services:
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "8080:80"
+    depends_on:
+      - postgres
+    networks:
+      - food_network
+
+  # Streamlit Application
+  streamlit:
+    image: python:3.11-slim
+    container_name: food_nutrition_streamlit
+    working_dir: /app
+    volumes:
+      - ../streamlit_app:/app
+      - ../requirements.txt:/requirements.txt
+    ports:
+      - "8501:8501"
+    environment:
+      - DB_HOST=food_nutrition_db
+      - DB_PORT=5432
+      - DB_NAME=food_nutrition_db
+      - DB_USER=analyst_user
+      - DB_PASSWORD=analyst_pass
+    command: >
+      bash -c "pip install --no-cache-dir -r /requirements.txt &&
+               streamlit run Home.py --server.port=8501 --server.address=0.0.0.0"
     depends_on:
       - postgres
     networks:

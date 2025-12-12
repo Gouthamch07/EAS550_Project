@@ -2,134 +2,109 @@ import pandas as pd
 from .database import execute_query
 
 def get_nutrition_distribution_by_category():
-    """Get nutritional content distribution across categories"""
+    """Get nutriscore distribution across pnns_groups_2"""
     query = """
     SELECT 
-        c.category_name,
-        AVG(nf.energy_100g) as avg_energy,
-        AVG(nf.fat_100g) as avg_fat,
-        AVG(nf.carbohydrates_100g) as avg_carbs,
-        AVG(nf.proteins_100g) as avg_protein,
-        AVG(nf.sugars_100g) as avg_sugars,
-        AVG(nf.salt_100g) as avg_salt,
-        COUNT(p.product_id) as product_count
-    FROM products p
-    JOIN categories c ON p.category_id = c.category_id
-    LEFT JOIN nutrition_facts nf ON p.product_id = nf.product_id
-    WHERE nf.energy_100g IS NOT NULL
-    GROUP BY c.category_name
-    HAVING COUNT(p.product_id) >= 10
+        COALESCE(pnns_groups_2, 'Unknown') as category_name,
+        AVG(nutriscore_score) as avg_score,
+        COUNT(*) as product_count
+    FROM products
+    WHERE pnns_groups_2 IS NOT NULL
+        AND nutriscore_score IS NOT NULL
+    GROUP BY pnns_groups_2
+    HAVING COUNT(*) >= 10
     ORDER BY product_count DESC
     LIMIT 20;
     """
     return execute_query(query)
 
 def get_nutrition_by_grade():
-    """Get nutrition statistics by grade"""
+    """Get product counts by nutriscore grade"""
     query = """
     SELECT 
-        p.nutrition_grade,
+        nutriscore_grade as nutrition_grade,
         COUNT(*) as product_count,
-        AVG(nf.energy_100g) as avg_energy,
-        AVG(nf.fat_100g) as avg_fat,
-        AVG(nf.sugars_100g) as avg_sugars,
-        AVG(nf.proteins_100g) as avg_protein
-    FROM products p
-    JOIN nutrition_facts nf ON p.product_id = nf.product_id
-    WHERE p.nutrition_grade IS NOT NULL
-        AND nf.energy_100g IS NOT NULL
-    GROUP BY p.nutrition_grade
-    ORDER BY p.nutrition_grade;
+        AVG(nutriscore_score) as avg_score
+    FROM products
+    WHERE nutriscore_grade IS NOT NULL
+    GROUP BY nutriscore_grade
+    ORDER BY nutriscore_grade;
     """
     return execute_query(query)
 
 def get_energy_vs_nutrients_scatter():
-    """Get data for energy vs nutrients scatter plot"""
+    """Get nutriscore vs nova group scatter"""
     query = """
     SELECT 
-        p.product_name,
-        c.category_name,
-        nf.energy_100g,
-        nf.fat_100g,
-        nf.sugars_100g,
-        nf.proteins_100g,
-        p.nutrition_grade
-    FROM products p
-    JOIN categories c ON p.category_id = c.category_id
-    JOIN nutrition_facts nf ON p.product_id = nf.product_id
-    WHERE nf.energy_100g IS NOT NULL
-        AND nf.fat_100g IS NOT NULL
-        AND nf.energy_100g < 3000  -- Remove outliers
-        AND nf.fat_100g < 100
+        product_name,
+        COALESCE(pnns_groups_2, 'Unknown') as category_name,
+        nutriscore_score,
+        nova_group,
+        nutriscore_grade as nutrition_grade
+    FROM products
+    WHERE nutriscore_score IS NOT NULL
+        AND nutriscore_grade IS NOT NULL
+        AND nova_group IS NOT NULL
+        AND product_name IS NOT NULL
+        AND product_name != ''
+    ORDER BY RANDOM()
     LIMIT 5000;
     """
     return execute_query(query)
 
 def get_categories_list():
-    """Get list of categories for filtering"""
+    """Get list of food categories"""
     query = """
-    SELECT DISTINCT category_name 
-    FROM categories 
-    ORDER BY category_name;
+    SELECT DISTINCT pnns_groups_2 as category_name
+    FROM products 
+    WHERE pnns_groups_2 IS NOT NULL
+    ORDER BY pnns_groups_2;
     """
     return execute_query(query)
 
-def get_high_sugar_products(threshold: float = 15.0):
-    """Get products with high sugar content"""
+def get_high_sugar_products(threshold: float = 5.0):
+    """Get products with poor nutriscore (> threshold)"""
     query = """
     SELECT 
         p.product_name,
-        b.brand_name,
-        c.category_name,
-        nf.sugars_100g,
-        nf.energy_100g,
-        p.nutrition_grade
+        'Unknown' as brand_name,
+        COALESCE(p.pnns_groups_2, 'Unknown') as category_name,
+        p.nutriscore_score,
+        p.nutriscore_grade as nutrition_grade
     FROM products p
-    JOIN brands b ON p.brand_id = b.brand_id
-    JOIN categories c ON p.category_id = c.category_id
-    JOIN nutrition_facts nf ON p.product_id = nf.product_id
-    WHERE nf.sugars_100g > :threshold
-        AND nf.sugars_100g IS NOT NULL
-    ORDER BY nf.sugars_100g DESC
+    WHERE p.nutriscore_score > :threshold
+        AND p.nutriscore_score IS NOT NULL
+        AND p.product_name IS NOT NULL
+        AND p.product_name != ''
+    ORDER BY p.nutriscore_score DESC
     LIMIT 100;
     """
     return execute_query(query, params={'threshold': threshold})
 
 def get_nutrition_by_filtered_category(category: str = None):
-    """Get nutrition facts filtered by category"""
+    """Get products filtered by category"""
     if category and category != "All Categories":
         query = """
         SELECT 
-            p.product_name,
-            nf.energy_100g,
-            nf.fat_100g,
-            nf.carbohydrates_100g,
-            nf.proteins_100g,
-            nf.sugars_100g,
-            nf.salt_100g,
-            p.nutrition_grade
-        FROM products p
-        JOIN categories c ON p.category_id = c.category_id
-        JOIN nutrition_facts nf ON p.product_id = nf.product_id
-        WHERE c.category_name = :category
-            AND nf.energy_100g IS NOT NULL
+            product_name,
+            nutriscore_score,
+            nutriscore_grade as nutrition_grade,
+            nova_group
+        FROM products
+        WHERE pnns_groups_2 = :category
+            AND nutriscore_score IS NOT NULL
         LIMIT 1000;
         """
         return execute_query(query, params={'category': category})
     else:
         query = """
         SELECT 
-            p.product_name,
-            nf.energy_100g,
-            nf.fat_100g,
-            nf.carbohydrates_100g,
-            nf.proteins_100g,
-            nf.sugars_100g,
-            nf.salt_100g,
-            p.nutrition_grade
-        FROM products p
-        JOIN nutrition_facts nf ON p.product_id = nf.product_id
-        WHERE nf.energy_100g IS NOT NULL
+            product_name,
+            nutriscore_score,
+            nutriscore_grade as nutrition_grade,
+            nova_group
+        FROM products
+        WHERE nutriscore_score IS NOT NULL
         LIMIT 1000;
         """
         return execute_query(query)

@@ -3,12 +3,26 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
 import pandas as pd
 from typing import Optional
-import sys
-import os
 
-# Add parent directory to path to import config
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(_file_))))
-from config import DB_CONFIG
+# Import config - using try/except for robustness
+try:
+    import sys
+    import os
+    # Get the parent directory of utils (which is streamlit_app)
+    current_file_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(current_file_dir)
+    if parent_dir not in sys.path:
+        sys.path.insert(0, parent_dir)
+    from config import DB_CONFIG
+except:
+    # Fallback config if import fails
+    DB_CONFIG = {
+        'host': 'localhost',
+        'port': '5432',
+        'database': 'food_nutrition_db',
+        'user': 'analyst_user',
+        'password': 'analyst_pass'
+    }
 
 @st.cache_resource
 def get_engine():
@@ -19,7 +33,7 @@ def get_engine():
     )
     return create_engine(connection_string, poolclass=NullPool)
 
-@st.cache_data(ttl=600)  # Cache for 10 minutes
+@st.cache_data(ttl=600)
 def execute_query(query: str, params: Optional[dict] = None) -> pd.DataFrame:
     """Execute SQL query and return results as DataFrame"""
     try:
@@ -43,7 +57,7 @@ def test_connection():
         print(f"Connection test failed: {e}")
         return False
 
-@st.cache_data(ttl=3600)  # Cache for 1 hour
+@st.cache_data(ttl=3600)
 def get_database_stats():
     """Get basic database statistics"""
     stats = {}
@@ -54,16 +68,21 @@ def get_database_stats():
         stats['total_products'] = int(df['count'].iloc[0]) if not df.empty else 0
         
         # Total brands
-        df = execute_query("SELECT COUNT(DISTINCT brand_id) as count FROM products WHERE brand_id IS NOT NULL")
+        df = execute_query("SELECT COUNT(*) as count FROM brands")
         stats['total_brands'] = int(df['count'].iloc[0]) if not df.empty else 0
         
         # Total categories
         df = execute_query("SELECT COUNT(*) as count FROM categories")
         stats['total_categories'] = int(df['count'].iloc[0]) if not df.empty else 0
         
-        # Total countries
-        df = execute_query("SELECT COUNT(*) as count FROM countries")
-        stats['total_countries'] = int(df['count'].iloc[0]) if not df.empty else 0
+        # Total countries (if countries table exists)
+        try:
+            df = execute_query("SELECT COUNT(*) as count FROM countries")
+            stats['total_countries'] = int(df['count'].iloc[0]) if not df.empty else 0
+        except:
+            # If countries table doesn't exist, try products table
+            df = execute_query("SELECT COUNT(DISTINCT country_name) as count FROM products WHERE country_name IS NOT NULL")
+            stats['total_countries'] = int(df['count'].iloc[0]) if not df.empty else 0
         
     except Exception as e:
         print(f"Error getting stats: {e}")
