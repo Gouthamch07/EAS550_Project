@@ -127,3 +127,33 @@ You can connect to the database using any standard SQL client or the included pg
 - **Port:**  `5432`
 - **Database:**  `food_nutrition_db`
 - **Username/Password:** Use the `postgres` superuser, `analyst_user`, or `app_service_user` credentials.
+
+---
+
+## Phase 3: The Application Layer (Streamlit Dashboard)
+
+**Goal:** Provide an interactive, user-friendly interface to explore the nutritional data.
+
+### Features
+
+- **Nutritional Deep Dive:** Interactive charts analyzing Nutri-Score distributions across categories.
+- **Poor Nutrition Detector:** A tool to identify high-sugar/low-quality products using configurable thresholds.
+- **Data Lineage:** Powered by the Phase 2 Star Schema (`analytics` schema) for high-performance querying.
+- **Live Database Connection:** Real-time connection to the PostgreSQL container.
+
+### How to Run the App
+
+The application is containerized and runs automatically with the database.
+
+1. **Start the Environment:**
+
+   ```bash
+   docker-compose -f docker/docker-compose.yml up -d --build
+   ```
+
+2. **Access the Dashboard:**
+    Open your browser and navigate to:
+    👉 <http://localhost:8501>
+
+3. **Troubleshooting:**
+    If the app cannot connect to the database immediately, wait 10 seconds for Postgres to initialize and refresh the page.
