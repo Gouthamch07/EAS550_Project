@@ -143,7 +143,18 @@ You can connect to the database using any standard SQL client or the included pg
 
 ### How to Run the App
 
-The application is containerized and runs automatically with the database.
+**Prerequisites:**
+Ensure you have completed Phase 1 (Database Ingestion) and Phase 2 (dbt transformation) before running the app.
+
+#### Step 1: Grant Permissions to the Analyst
+
+Since the `analytics` schema was created by dbt *after* the initial security setup, you must manually grant read permissions to the analyst role. Run this command in your terminal:
+
+```bash
+docker exec -it food_nutrition_db psql -U postgres -d food_nutrition_db -c "GRANT USAGE ON SCHEMA analytics TO read_only_analyst; GRANT SELECT ON ALL TABLES IN SCHEMA analytics TO read_only_analyst; ALTER DEFAULT PRIVILEGES IN SCHEMA analytics GRANT SELECT ON TABLES TO read_only_analyst;"
+```
+
+#### Step 2: Build and Launch the Application
 
 1. **Start the Environment:**
 
