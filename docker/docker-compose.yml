@@ -13,7 +13,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ../sql/:/docker-entrypoint-initdb.d/
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -36,12 +36,12 @@ services:
 
   # Streamlit Application
   streamlit:
-    image: python:3.11-slim
+    build:
+      context: ..
+      dockerfile: streamlit_app/Dockerfile
     container_name: food_nutrition_streamlit
-    working_dir: /app
     volumes:
       - ../streamlit_app:/app
-      - ../requirements.txt:/requirements.txt
     ports:
       - "8501:8501"
     environment:
@@ -50,16 +50,13 @@ services:
       - DB_NAME=food_nutrition_db
       - DB_USER=analyst_user
       - DB_PASSWORD=analyst_password
-    command: >
-      bash -c "pip install --no-cache-dir -r /requirements.txt &&
-               streamlit run Home.py --server.port=8501 --server.address=0.0.0.0"
     depends_on:
       - postgres
     networks:
       - food_network
-
 volumes:
   postgres_data:
+
 
 networks:
   food_network:

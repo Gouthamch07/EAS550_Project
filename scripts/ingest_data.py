@@ -18,6 +18,10 @@ import numpy as np
 from sqlalchemy import create_engine, text
 from openfoodfacts import ProductDataset, DatasetType
 import json
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # ============================================================================
 # CONFIGURATION
@@ -35,7 +39,13 @@ RAW_DATA_FILE = os.path.join(DATA_DIR, "openfoodfacts_raw.csv")
 CLEANED_DATA_FILE = os.path.join(DATA_DIR, "openfoodfacts_cleaned.csv")
 
 # Database connection string (update with your credentials)
-DATABASE_URL = "postgresql://postgres:password@localhost:5432/food_nutrition_db"
+DB_USER = os.getenv("DB_USER", "postgres")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PORT = os.getenv("DB_PORT", "5432")
+DB_NAME = os.getenv("DB_NAME", "food_nutrition_db")
+
+DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 # Selected columns for the project
 SELECTED_COLUMNS = [
