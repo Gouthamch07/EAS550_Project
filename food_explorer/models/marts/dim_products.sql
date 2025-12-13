@@ -5,5 +5,6 @@ SELECT
     quantity_numeric,
     quantity_unit,
     nutriscore_grade,
+    nutriscore_score,
     nova_group
 FROM {{ source('public', 'products') }}

@@ -86,7 +86,8 @@ with tab1:
     with col1:
         with st.spinner("Loading distribution data..."):
             try:
-                dist_df = get_nutrition_distribution_by_category()
+                # UPDATE THIS LINE: Pass the selected_grade from the sidebar
+                dist_df = get_nutrition_distribution_by_category(selected_grade)
             except Exception as e:
                 st.error(f"Error loading data: {str(e)}")
                 dist_df = pd.DataFrame()
@@ -257,7 +258,7 @@ with tab3:
         with col2:
             grade_counts = box_df['nutrition_grade'].value_counts()
             best_grade = grade_counts.idxmax()
-            st.metric("Most Common Grade", best_grade.upper())
+            st.metric("Most Common Grade", str(best_grade).upper())
     else:
         st.warning("⚠️ No data available for the selected category.")
 
@@ -300,7 +301,7 @@ with tab4:
             st.markdown("**Grade Distribution:**")
             grade_counts = high_sugar_df['nutrition_grade'].value_counts().sort_index()
             for grade, count in grade_counts.items():
-                st.write(f"• Grade {grade.upper()}: {count} products")
+                st.write(f"• Grade {str(grade).upper()}: {count} products")
         
         with col2:
             # Horizontal bar chart
@@ -333,9 +334,21 @@ with tab4:
         # Detailed table
         st.subheader("📋 Detailed Product List")
         
-        display_df = high_sugar_df[['product_name', 'brand_name', 'category_name', 
-                                     'nutriscore_score', 'nutrition_grade']].copy()
-        display_df.columns = ['Product', 'Brand', 'Category', 'Nutriscore', 'Grade']
+        # Ensure columns exist before selecting
+        cols_to_show = ['product_name', 'brand_name', 'nutriscore_score', 'nutrition_grade', 'sugars_100g']
+        available_cols = [c for c in cols_to_show if c in high_sugar_df.columns]
+        
+        display_df = high_sugar_df[available_cols].copy()
+        
+        # Rename for nicer display
+        column_map = {
+            'product_name': 'Product',
+            'brand_name': 'Brand',
+            'nutriscore_score': 'Nutriscore',
+            'nutrition_grade': 'Grade',
+            'sugars_100g': 'Sugar (g/100g)'
+        }
+        display_df.rename(columns=column_map, inplace=True)
         
         st.dataframe(
             display_df,

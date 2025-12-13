@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
@@ -51,7 +49,7 @@ services:
       - DB_PORT=5432
       - DB_NAME=food_nutrition_db
       - DB_USER=analyst_user
-      - DB_PASSWORD=analyst_pass
+      - DB_PASSWORD=analyst_password
     command: >
       bash -c "pip install --no-cache-dir -r /requirements.txt &&
                streamlit run Home.py --server.port=8501 --server.address=0.0.0.0"

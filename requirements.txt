@@ -4,10 +4,8 @@ sqlalchemy
 psycopg2-binary
 python-dotenv
 streamlit
-fastapi
-uvicorn
-huggingface-hub
 openfoodfacts
 dbt-postgres
 plotly
 psycopg2-binary
+python-dotenv
