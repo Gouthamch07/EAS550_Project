@@ -103,7 +103,32 @@ To transform the data into the Star Schema (`analytics` schema):
 ```bash
 # Install dbt adapter (if not already installed)
 pip install dbt-postgres
+```
 
+### Setting up the Data Warehouse (dbt)
+
+To initialize the dbt project locally, run the following command and enter the configuration details when prompted:
+
+```bash
+dbt init
+```
+
+#### Enter the following values when prompted:
+
+```bash
+Which database would you like to use? [1, 2, 3, ...] (enter the number pertaining to 'postgres')
+host   : localhost
+port   : 5432 (default)
+user   : postgres
+pass   : password
+dbname : food_nutrition_db
+schema : analytics
+threads: 1 (default)
+```
+
+#### Running the dbt Models
+
+```bash
 # Navigate to the dbt project directory
 cd food_explorer
 
