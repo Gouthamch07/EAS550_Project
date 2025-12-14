@@ -113,7 +113,7 @@ To initialize the dbt project locally, run the following command and enter the c
 dbt init
 ```
 
-#### Enter the following values when prompted:
+#### Enter the following values when prompted
 
 ```bash
 Which database would you like to use? [1, 2, 3, ...] (enter the number pertaining to 'postgres')
