@@ -211,7 +211,7 @@ You can connect to the database using any standard SQL client or the included pg
 
 📸 Dashboard Preview
 
-![Streamlit Home Page](design/streamlit_home.png)
+![Streamlit Home Page](./design/streamlit_home.png)
 
 ### Features
 
@@ -220,7 +220,7 @@ You can connect to the database using any standard SQL client or the included pg
 - **Data Lineage:** Powered by the Phase 2 Star Schema (`analytics` schema) for high-performance querying.
 - **Live Database Connection:** Real-time connection to the PostgreSQL container.
 
-![Streamlit Deep Dive](design/streamlit_deep_dive.png)
+![Streamlit Deep Dive](./design/streamlit_deep_dive.png)
 
 ### How to Run the App
 
