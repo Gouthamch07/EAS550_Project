@@ -32,7 +32,7 @@ with col2:
 # Comparison Logic
 if prod1_data is not None and prod2_data is not None:
     st.markdown("---")
-    st.header("📊 Head-to-Head")
+    st.header("📊 Head-to-Head Stats")
     
     metrics = [
         ('Energy (kcal)', 'energy_kcal_100g', False), # False = lower is better
@@ -48,28 +48,59 @@ if prod1_data is not None and prod2_data is not None:
         val1 = float(prod1_data.get(col, 0) or 0)
         val2 = float(prod2_data.get(col, 0) or 0)
         
-        if val1 == val2:
-            winner = "Tie"
-        elif higher_is_better:
-            winner = "Product 1" if val1 > val2 else "Product 2"
-        else:
-            winner = "Product 1" if val1 < val2 else "Product 2"
+        winner = "Tie"
+        if val1 != val2:
+            if higher_is_better:
+                winner = "Product 1" if val1 > val2 else "Product 2"
+            else:
+                winner = "Product 1" if val1 < val2 else "Product 2"
             
         if winner == "Product 1": wins1 += 1
         if winner == "Product 2": wins2 += 1
         
+        # Formatting
+        v1_str = f"{val1:.1f}"
+        v2_str = f"{val2:.1f}"
+        
         data.append({
             "Metric": label,
-            f"{prod1_data['product_name'][:20]}...": val1,
-            f"{prod2_data['product_name'][:20]}...": val2,
-            "Winner": winner
+            f"{prod1_data['product_name'][:20]}...": v1_str,
+            f"{prod2_data['product_name'][:20]}...": v2_str,
+            "Winner": "👈" if winner == "Product 1" else ("👉" if winner == "Product 2" else "=")
         })
         
     st.table(pd.DataFrame(data))
     
+    # === VERDICT ===
+    st.markdown("---")
+    st.markdown("## 🏆 THE VERDICT")
+    
     if wins1 > wins2:
-        st.success(f"🏆 WINNER: {prod1_data['product_name']}")
+        st.success(f"🏆 **WINNER: {prod1_data['product_name']}** (Won {wins1} categories)")
     elif wins2 > wins1:
-        st.success(f"🏆 WINNER: {prod2_data['product_name']}")
+        st.success(f"🏆 **WINNER: {prod2_data['product_name']}** (Won {wins2} categories)")
     else:
-        st.warning("🤝 It's a Tie!")
+        st.warning("🤝 **IT'S A TIE!** Both products have similar nutritional profiles.")
+
+    # === SUGAR VISUAL ===
+    st.markdown("---")
+    st.markdown("### 🍬 Sugar Content Visualization (per 100g)")
+    
+    s1 = float(prod1_data.get('sugars_100g', 0) or 0)
+    s2 = float(prod2_data.get('sugars_100g', 0) or 0)
+    
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown(f"**{prod1_data['product_name']}**")
+        cubes1 = int(s1 / 4) # 4g per cube
+        st.write("🧊 " * min(cubes1, 20) + ("..." if cubes1 > 20 else ""))
+        st.caption(f"{s1:.1f}g Sugar ≈ {cubes1} Cubes")
+        
+    with c2:
+        st.markdown(f"**{prod2_data['product_name']}**")
+        cubes2 = int(s2 / 4)
+        st.write("🧊 " * min(cubes2, 20) + ("..." if cubes2 > 20 else ""))
+        st.caption(f"{s2:.1f}g Sugar ≈ {cubes2} Cubes")
+
+else:
+    st.info("👆 Search and select two products above to compare them!")

@@ -81,17 +81,37 @@ tab1, tab2, tab3, tab4 = st.tabs([
 with tab1:
     st.header("Nutriscore Distribution by Category")
     
+    # Load data first
+    with st.spinner("Loading distribution data..."):
+        try:
+            dist_df = get_nutrition_distribution_by_category(selected_grade)
+            grade_df = get_nutrition_by_grade()
+        except Exception as e:
+            st.error(f"Error loading data: {str(e)}")
+            dist_df = pd.DataFrame()
+            grade_df = pd.DataFrame()
+
+    # --- SECTION 1: METRICS (Moved to top for better layout) ---
+    if not dist_df.empty:
+        st.markdown("### 🥗 Best Scoring Categories")
+        # Display top 5 categories horizontally
+        top_5 = dist_df.nsmallest(5, 'avg_score')[['category_name', 'avg_score', 'product_count']]
+        
+        cols = st.columns(5)
+        for idx, (i, row) in enumerate(top_5.iterrows()):
+            with cols[idx]:
+                st.metric(
+                    label=row['category_name'][:20], # Truncate long names
+                    value=f"{row['avg_score']:.1f}",
+                    delta=f"{row['product_count']} items",
+                    delta_color="off"
+                )
+        st.markdown("---")
+
+    # --- SECTION 2: CHARTS (Side-by-Side, Equal Height) ---
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        with st.spinner("Loading distribution data..."):
-            try:
-                # UPDATE THIS LINE: Pass the selected_grade from the sidebar
-                dist_df = get_nutrition_distribution_by_category(selected_grade)
-            except Exception as e:
-                st.error(f"Error loading data: {str(e)}")
-                dist_df = pd.DataFrame()
-        
         if not dist_df.empty:
             # Create bar chart for nutriscore
             fig = go.Figure()
@@ -100,58 +120,48 @@ with tab1:
                 name='Average Nutriscore',
                 x=dist_df['category_name'],
                 y=dist_df['avg_score'],
-                marker_color=COLORS['primary'],
-                text=dist_df['avg_score'].round(2),
+                marker=dict(
+                    color=dist_df['avg_score'],
+                    colorscale='RdYlGn_r', # Red to Green reversed (Green is low score)
+                    showscale=False
+                ),
+                text=dist_df['avg_score'].round(1),
                 textposition='outside'
             ))
             
             fig.update_layout(
-                title="Average Nutriscore by Category (lower is better)",
+                title="Average Nutriscore by Category (Lower is Better)",
                 xaxis_title="Category",
                 yaxis_title="Average Nutriscore",
-                height=500,
+                height=500, # Fixed height
+                margin=dict(l=20, r=20, t=50, b=100),
                 hovermode='x unified'
             )
             
             fig.update_xaxes(tickangle=-45)
-            
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.warning("⚠️ No data available. Please check your database connection.")
+            st.warning("⚠️ No data available.")
     
     with col2:
-        st.subheader("📈 Category Statistics")
-        
-        if not dist_df.empty:
-            # Display top categories (best scores)
-            top_5 = dist_df.nsmallest(5, 'avg_score')[['category_name', 'avg_score', 'product_count']]
+        if not grade_df.empty:
+            # Nutrition grade distribution donut chart
+            fig_pie = go.Figure(data=[go.Pie(
+                labels=grade_df['nutrition_grade'].str.upper(),
+                values=grade_df['product_count'],
+                hole=.4, # Make it a donut chart
+                marker_colors=[GRADE_COLORS.get(g, '#ccc') for g in grade_df['nutrition_grade']]
+            )])
             
-            st.markdown("**🥗 Best Scoring Categories:**")
-            for idx, row in top_5.iterrows():
-                st.metric(
-                    label=row['category_name'][:30],
-                    value=f"{row['avg_score']:.1f}",
-                    delta=f"{row['product_count']} products"
-                )
+            fig_pie.update_layout(
+                title='Global Grade Distribution',
+                height=500, # Same height as bar chart
+                margin=dict(l=20, r=20, t=50, b=20),
+                legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
+            )
             
-            st.markdown("---")
-            
-            # Nutrition grade distribution pie chart
-            try:
-                grade_df = get_nutrition_by_grade()
-                if not grade_df.empty:
-                    fig_pie = px.pie(
-                        grade_df,
-                        values='product_count',
-                        names='nutrition_grade',
-                        title='Products by Nutriscore Grade',
-                        color='nutrition_grade',
-                        color_discrete_map=GRADE_COLORS
-                    )
-                    fig_pie.update_traces(textposition='inside', textinfo='percent+label')
-                    st.plotly_chart(fig_pie, use_container_width=True)
-            except Exception as e:
-                st.error(f"Error loading grade data: {str(e)}")
+            fig_pie.update_traces(textposition='inside', textinfo='percent+label')
+            st.plotly_chart(fig_pie, use_container_width=True)
 
 # TAB 2: Nutriscore vs NOVA Group Scatter
 with tab2:
