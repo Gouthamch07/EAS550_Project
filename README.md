@@ -134,6 +134,9 @@ cd food_explorer
 
 # Run the models to create the Fact and Dimension tables
 dbt run
+
+# move back to the project root
+cd ..
 ```
 
 ---
