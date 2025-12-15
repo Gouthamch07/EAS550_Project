@@ -4,34 +4,72 @@ This is the group project for EAS 550: Data Models and Query Languages, submitte
 
 ## Project Overview
 
-The "Global Food & Nutrition Explorer" is a database application designed to ingest, clean, and structure the vast Open Food Facts dataset. Our goal is to transform this raw, complex data into a normalized relational database, making it accessible for nutritional analysis and consumer insights.
+The "Global Food & Nutrition Explorer" is an end-to-end database application designed to ingest, clean, and structure the vast Open Food Facts dataset. Our goal was to transform raw, messy data into a normalized relational database and a high-performance data warehouse, accessible via a user-friendly interactive dashboard.
 
-This repository contains the complete pipeline for Phase 1, which focuses on building a robust and secure database foundation.
+This repository contains the complete pipeline for **Phase 1 (ETL & OLTP)**, **Phase 2 (OLAP & Analytics)**, and **Phase 3 (Application Layer)**.
+
+---
+
+## 👥 Team & Contribution
+
+We adopted an agile workflow with tasks distributed equally across all phases.
+
+| Team Member | Primary Roles & Contributions |
+| :--- | :--- |
+| **Akash Ankush Kamble** | **Database Architect & Security.** Designed the 3NF Schema, implemented RBAC security roles, and managed the final integration of the application layer. |
+| **Nidhi Rajani** | **Frontend Lead & Documentation.** Developed the Streamlit UI/UX, designed the visualizations, and compiled the project documentation and reports. |
+| **Goutham Chengalvala** | **Data Engineer & Analytics.** Built the Python ingestion pipeline, implemented the dbt Data Warehouse transformation, and optimized SQL query performance. |
+
+---
+
+## 🚀 Project Milestones & Journey
+
+### ✅ Milestones Achieved
+
+1. **Robust ETL Pipeline:** Successfully ingested 115,000+ products, handling missing values and data type standardization.
+2. **3NF Normalization:** Decomposed a flat CSV into 10 relational tables to eliminate redundancy.
+3. **Data Warehouse:** Implemented a Star Schema using **dbt** to optimize analytical queries.
+4. **Performance Tuning:** Achieved query optimization using B-Tree and GIN indexes.
+5. **Interactive App:** Deployed a Dockerized Streamlit dashboard with 7 distinct features.
+
+### 🛠️ Issues Encountered & Solutions
+
+| Issue | Solution |
+| :--- | :--- |
+| **Numeric Overflow** | Some products had erroneous energy values (>100k kcal). We updated the schema to `NUMERIC(10,3)` and added cleaning logic in Python to handle outliers. |
+| **Constraint Violations** | Duplicate tags in the source data caused Primary Key violations in junction tables. We implemented a `set()` conversion logic in the ingestion script to enforce uniqueness. |
+| **dbt Materialization** | dbt initially created Views instead of Tables. We reconfigured `dbt_project.yml` to materialize models as Tables for better performance. |
+| **Permissions** | The read-only analyst role could not access new dbt tables. We implemented `ALTER DEFAULT PRIVILEGES` in Postgres to automatically grant access to future tables. |
+
+---
 
 ## Phase 1: Database Foundation (OLTP)
+
+**Goal:** Build a robust, normalized (3NF), and secure PostgreSQL database.
 
 ### Core Technologies
 
 - **Containerization:** Docker & Docker Compose
 - **Database:** PostgreSQL 15
-- **Data Ingestion & Logic:** Python 3, Pandas, SQLAlchemy
+- **Data Ingestion:** Python 3, Pandas, SQLAlchemy
 - **Version Control:** Git & GitHub
 
-### How to Run the Pipeline
+### How to Run Phase 1
 
 **Prerequisites:**
 
 - Docker Desktop installed and running.
 - Python 3.8+ and `pip` installed.
 
-### Step 1: Clone the Repository
+#### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/Gouthamch07/EAS550_Project.git
 cd EAS550_Project
 ```
 
-**Step 2: Set Up the Python Environment**
+#### Step 2: Set Up the Python Environment
+
 It is recommended to use a virtual environment.
 
 ```bash
@@ -40,21 +78,23 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-**Step 3: Launch the Database**
+#### Step 3: Launch Database & Ingest Data
+
 This command will start the PostgreSQL and pgAdmin containers. On the first run, it will automatically create the database schema and security roles by executing the files in the `sql/` directory.
 
 ```bash
 docker-compose -f docker/docker-compose.yml up -d
 ```
 
-**Step 4: Run the Data Ingestion Script**
+#### Step 4: Run the Data Ingestion Script
+
 This script will download the raw data, clean it, and populate the running database.
 
 ```bash
 python scripts/ingest_data.py
 ```
 
-The pipeline is now complete! The database `food_nutrition_db` is fully populated and ready for querying.
+The Phase 1 is now complete! The database `food_nutrition_db` is fully populated and ready for querying.
 
 ### Accessing the Database
 
@@ -85,19 +125,26 @@ If you need a video demonstration of the setup process, please refer to the foll
 - **Performance Tuning**: Implementation of B-Tree and GIN indexes to optimize query execution. Detailed analysis is available in [Performance_Tuning_Report.md](./Performance_Tuning_Report.md).
 - **Data Warehousing**: Transformation of the 3NF schema into a Star Schema using dbt, enabling efficient OLAP workflows.
 
-**How to Run Phase 2**:
+### How to Run Phase 2
 
-**1. Run Analytical Queries**
+#### Step 1: Run Analytical Queries
+
 Execute the advanced business queries against the populated database:
 
-`docker exec -i food_nutrition_db psql -U postgres -d food_nutrition_db < sql/phase2/analytics_queries.sql`
+```bash
+docker exec -i food_nutrition_db psql -U postgres -d food_nutrition_db < sql/phase2/analytics_queries.sql
+```
 
-**2. Run Performance Tuning Tests**  
+### Step 2: Run Performance Tuning Tests
+
 Execute the baseline measurement, index creation, and optimized measurement scripts:
 
-`docker exec -i food_nutrition_db psql -U postgres -d food_nutrition_db < sql/phase2/performance_tuning.sql`
+```bash
+docker exec -i food_nutrition_db psql -U postgres -d food_nutrition_db < sql/phase2/performance_tuning.sql
+```
 
-**3. Build the Data Warehouse (dbt)**  
+### Step 3: Build the Data Warehouse (dbt)
+
 To transform the data into the Star Schema (`analytics` schema):
 
 ```bash
@@ -105,7 +152,7 @@ To transform the data into the Star Schema (`analytics` schema):
 pip install dbt-postgres
 ```
 
-### Setting up the Data Warehouse (dbt)
+#### Setting up the Data Warehouse (dbt)
 
 To initialize the dbt project locally, run the following command and enter the configuration details when prompted:
 
@@ -162,12 +209,18 @@ You can connect to the database using any standard SQL client or the included pg
 
 **Goal:** Provide an interactive, user-friendly interface to explore the nutritional data.
 
+📸 Dashboard Preview
+
+![Streamlit Home Page](design/streamlit_home.png)
+
 ### Features
 
 - **Nutritional Deep Dive:** Interactive charts analyzing Nutri-Score distributions across categories.
 - **Poor Nutrition Detector:** A tool to identify high-sugar/low-quality products using configurable thresholds.
 - **Data Lineage:** Powered by the Phase 2 Star Schema (`analytics` schema) for high-performance querying.
 - **Live Database Connection:** Real-time connection to the PostgreSQL container.
+
+![Streamlit Deep Dive](design/streamlit_deep_dive.png)
 
 ### How to Run the App
 
@@ -184,15 +237,23 @@ docker exec -it food_nutrition_db psql -U postgres -d food_nutrition_db -c "GRAN
 
 #### Step 2: Build and Launch the Application
 
-1. **Start the Environment:**
+a. **Start the Environment:**
 
-   ```bash
-   docker-compose -f docker/docker-compose.yml up -d --build
-   ```
+  ```bash
+  docker-compose -f docker/docker-compose.yml up -d --build
+  ```
 
-2. **Access the Dashboard:**
-    Open your browser and navigate to:
-    👉 <http://localhost:8501>
+b. **Access the Dashboard:**
+  Open your browser and navigate to:
+  👉 <http://localhost:8501>
 
-3. **Troubleshooting:**
-    If the app cannot connect to the database immediately, wait 10 seconds for Postgres to initialize and refresh the page.
+c. **Troubleshooting:**
+  If the app cannot connect to the database immediately, wait 10 seconds for Postgres to initialize and refresh the page.
+
+---
+
+🎥 Final Video Demonstration
+
+Watch our complete end-to-end walkthrough, covering data ingestion, database structure, and the full application demo.
+
+[Click Here to Watch the Video Demo](https://youtu.be/Wpx4_iM8mR8)
